@@ -56,6 +56,7 @@ initialLoad()
 
 // Main endpoint
 app.get("/", (req, res) => {
+	const requestStartTime = new Date().getMilliseconds();
 	res.setHeader("traceId", JSON.parse(getTraceIdJson()).traceId)
 	res.send("This is our main endpoint")
 	emitsPayloadMetric(res._contentLength + mimicPayLoadSize(), '/', res.statusCode);
@@ -64,6 +65,7 @@ app.get("/", (req, res) => {
 
 // GET all users
 app.get("/users",async (req, res) => {
+	const requestStartTime = new Date().getMilliseconds();
 	User.find().then((users) => {
 		res.setHeader("traceId", JSON.parse(getTraceIdJson()).traceId)
 		res.send(users)
@@ -78,6 +80,7 @@ app.get("/users",async (req, res) => {
 
 // GET single user
 app.get("/users/:uid",async (req, res) => {
+	const requestStartTime = new Date().getMilliseconds();
 	User.findById(req.params.uid).then((user) => {
 		res.setHeader("traceId", JSON.parse(getTraceIdJson()).traceId)
 		if(user){
@@ -96,6 +99,7 @@ app.get("/users/:uid",async (req, res) => {
 
 // GET all orders for an user
 app.get("/users/:uid/orders", async (req, res) => {
+	const requestStartTime = new Date().getMilliseconds();
 	res.setHeader("traceId", JSON.parse(getTraceIdJson()).traceId)
 	axios.get(`/orders?uid=${req.params.uid}`).then( (orders) => {
 		
@@ -139,6 +143,7 @@ app.post("/user", async (req, res) => {
 
 // Create new order for a user
 app.post("/users/:uid/order", async (req, res) => {
+	const requestStartTime = new Date().getMilliseconds();
 	res.setHeader("traceId", JSON.parse(getTraceIdJson()).traceId)
 	try {
 		const orderResponse = await axios.post(`${process.env.ORDERS_API_URL}/order`,{
@@ -175,6 +180,7 @@ app.post("/users/:uid/order", async (req, res) => {
 
 // Delete user by userId
 app.delete("/users/:uid", async (req, res) => {
+	const requestStartTime = new Date().getMilliseconds();
 	res.setHeader("traceId", JSON.parse(getTraceIdJson()).traceId)
 	User.findByIdAndDelete(req.params.uid).then((delUser) => {
 		if(delUser == null)
@@ -189,6 +195,7 @@ app.delete("/users/:uid", async (req, res) => {
 
 // Delete all the orders for an user
 app.delete("/users/:uid/orders", async (req, res) => {
+	const requestStartTime = new Date().getMilliseconds();
 	res.setHeader("traceId", JSON.parse(getTraceIdJson()).traceId)
 	axios.delete(`${process.env.ORDERS_API_URL}/orders?uid=${req.params.uid}`).then( (delRes) => {
 		res.status(202).send("Orders deleted..")

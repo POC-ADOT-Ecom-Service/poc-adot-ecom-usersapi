@@ -22,7 +22,7 @@ spec:
       containers:
       - name: usersapi
         image: iamnilanjan3/ecom-users-api:latest
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: Always
         resources:
           limits:
             memory: "256Mi"
