@@ -56,21 +56,21 @@ initialLoad()
 
 // Main endpoint
 app.get("/", (req, res) => {
-	const requestStartTime = new Date().getMilliseconds();
+	const requestStartTime = new Date();
 	res.setHeader("traceId", JSON.parse(getTraceIdJson()).traceId)
 	res.send("This is our main endpoint")
 	emitsPayloadMetric(res._contentLength + mimicPayLoadSize(), '/', res.statusCode);
-	emitReturnTimeMetric(new Date().getMilliseconds() - requestStartTime, '/user', res.statusCode);
+	emitReturnTimeMetric(new Date() - requestStartTime, '/user', res.statusCode);
 })
 
 // GET all users
 app.get("/users",async (req, res) => {
-	const requestStartTime = new Date().getMilliseconds();
+	const requestStartTime = new Date();
 	User.find().then((users) => {
 		res.setHeader("traceId", JSON.parse(getTraceIdJson()).traceId)
 		res.send(users)
 		emitsPayloadMetric(res._contentLength + mimicPayLoadSize(), '/users', res.statusCode);
-		emitReturnTimeMetric(new Date().getMilliseconds() - requestStartTime, '/user', res.statusCode);
+		emitReturnTimeMetric(new Date() - requestStartTime, '/user', res.statusCode);
 	}).catch((err) => {
 		if(err) {
 			throw err
@@ -80,13 +80,13 @@ app.get("/users",async (req, res) => {
 
 // GET single user
 app.get("/users/:uid",async (req, res) => {
-	const requestStartTime = new Date().getMilliseconds();
+	const requestStartTime = new Date();
 	User.findById(req.params.uid).then((user) => {
 		res.setHeader("traceId", JSON.parse(getTraceIdJson()).traceId)
 		if(user){
 			res.json(user)
 			emitsPayloadMetric(res._contentLength + mimicPayLoadSize(), '/users', res.statusCode);
-			emitReturnTimeMetric(new Date().getMilliseconds() - requestStartTime, '/user', res.statusCode);
+			emitReturnTimeMetric(new Date() - requestStartTime, '/user', res.statusCode);
 		} else {
 			res.sendStatus(404)
 		}
@@ -99,14 +99,14 @@ app.get("/users/:uid",async (req, res) => {
 
 // GET all orders for an user
 app.get("/users/:uid/orders", async (req, res) => {
-	const requestStartTime = new Date().getMilliseconds();
+	const requestStartTime = new Date();
 	res.setHeader("traceId", JSON.parse(getTraceIdJson()).traceId)
 	axios.get(`/orders?uid=${req.params.uid}`).then( (orders) => {
 		
 		if(orders) {
 			res.send(orders)
 			emitsPayloadMetric(res._contentLength + mimicPayLoadSize(), '/users', res.statusCode);
-			emitReturnTimeMetric(new Date().getMilliseconds() - requestStartTime, '/user', res.statusCode);
+			emitReturnTimeMetric(new Date() - requestStartTime, '/user', res.statusCode);
 		}
 	}).catch( err => {
 		res.sendStatus(404).send(err)
@@ -115,7 +115,7 @@ app.get("/users/:uid/orders", async (req, res) => {
 
 // Create new user
 app.post("/user", async (req, res) => {
-	const requestStartTime = new Date().getMilliseconds();
+	const requestStartTime = new Date();
 	const newUser = {
 		"firstName":req.body.firstName,
 		"lastName": req.body.lastName,
@@ -131,7 +131,7 @@ app.post("/user", async (req, res) => {
 		res.setHeader("traceId", JSON.parse(getTraceIdJson()).traceId).status(201).send("User created..")
 		// emitsPayloadMetric(res._contentLength + req.socket.bytesRead, '/user', res.statusCode);
 		emitsPayloadMetric(res._contentLength + mimicPayLoadSize(), '/user', res.statusCode);
-        emitReturnTimeMetric(new Date().getMilliseconds() - requestStartTime, '/user', res.statusCode);
+        emitReturnTimeMetric(new Date() - requestStartTime, '/user', res.statusCode);
 		
 	}).catch( (err) => {
 		if(err) {
@@ -143,7 +143,7 @@ app.post("/user", async (req, res) => {
 
 // Create new order for a user
 app.post("/users/:uid/order", async (req, res) => {
-	const requestStartTime = new Date().getMilliseconds();
+	const requestStartTime = new Date();
 	res.setHeader("traceId", JSON.parse(getTraceIdJson()).traceId)
 	try {
 		const orderResponse = await axios.post(`${process.env.ORDERS_API_URL}/order`,{
@@ -162,7 +162,7 @@ app.post("/users/:uid/order", async (req, res) => {
 					res.status(201)
 					res.send(`Order created for user:${user.email} with orderId:${orderResponse.data._id}`)
 					emitsPayloadMetric(res._contentLength + mimicPayLoadSize(), '/users', res.statusCode);
-					emitReturnTimeMetric(new Date().getMilliseconds() - requestStartTime, '/user', res.statusCode);
+					emitReturnTimeMetric(new Date() - requestStartTime, '/user', res.statusCode);
 				}).catch(e => {
 					res.status(404)
 					res.send("failed to add orderId in user's doc")
@@ -180,13 +180,13 @@ app.post("/users/:uid/order", async (req, res) => {
 
 // Delete user by userId
 app.delete("/users/:uid", async (req, res) => {
-	const requestStartTime = new Date().getMilliseconds();
+	const requestStartTime = new Date();
 	res.setHeader("traceId", JSON.parse(getTraceIdJson()).traceId)
 	User.findByIdAndDelete(req.params.uid).then((delUser) => {
 		if(delUser == null)
 		res.send("User deleted with success...")
 		emitsPayloadMetric(res._contentLength + mimicPayLoadSize(), '/users', res.statusCode);
-		emitReturnTimeMetric(new Date().getMilliseconds() - requestStartTime, '/user', res.statusCode);
+		emitReturnTimeMetric(new Date() - requestStartTime, '/user', res.statusCode);
 	}).catch( () => {
 		res.sendStatus(404)
 	})
@@ -195,12 +195,12 @@ app.delete("/users/:uid", async (req, res) => {
 
 // Delete all the orders for an user
 app.delete("/users/:uid/orders", async (req, res) => {
-	const requestStartTime = new Date().getMilliseconds();
+	const requestStartTime = new Date();
 	res.setHeader("traceId", JSON.parse(getTraceIdJson()).traceId)
 	axios.delete(`${process.env.ORDERS_API_URL}/orders?uid=${req.params.uid}`).then( (delRes) => {
 		res.status(202).send("Orders deleted..")
 		emitsPayloadMetric(res._contentLength + mimicPayLoadSize(), '/users', res.statusCode);
-		emitReturnTimeMetric(new Date().getMilliseconds() - requestStartTime, '/user', res.statusCode);
+		emitReturnTimeMetric(new Date() - requestStartTime, '/user', res.statusCode);
 	}).catch( (err) => {
 		res.status(404).send("Orders not found...")
 	})
