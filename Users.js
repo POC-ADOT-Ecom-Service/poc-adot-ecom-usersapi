@@ -58,6 +58,7 @@ initialLoad()
 app.get("/", (req, res) => {
 	res.setHeader("traceId", JSON.parse(getTraceIdJson()).traceId)
 	res.send("This is our main endpoint")
+	emitsPayloadMetric(res._contentLength + mimicPayLoadSize(), '/', res.statusCode);
 })
 
 // GET all users
@@ -65,6 +66,7 @@ app.get("/users",async (req, res) => {
 	User.find().then((users) => {
 		res.setHeader("traceId", JSON.parse(getTraceIdJson()).traceId)
 		res.send(users)
+		emitsPayloadMetric(res._contentLength + mimicPayLoadSize(), '/users', res.statusCode);
 	}).catch((err) => {
 		if(err) {
 			throw err
@@ -78,6 +80,7 @@ app.get("/users/:uid",async (req, res) => {
 		res.setHeader("traceId", JSON.parse(getTraceIdJson()).traceId)
 		if(user){
 			res.json(user)
+			emitsPayloadMetric(res._contentLength + mimicPayLoadSize(), '/users', res.statusCode);
 		} else {
 			res.sendStatus(404)
 		}
@@ -95,6 +98,7 @@ app.get("/users/:uid/orders", async (req, res) => {
 		
 		if(orders) {
 			res.send(orders)
+			emitsPayloadMetric(res._contentLength + mimicPayLoadSize(), '/users', res.statusCode);
 		}
 	}).catch( err => {
 		res.sendStatus(404).send(err)
@@ -117,7 +121,8 @@ app.post("/user", async (req, res) => {
 	const user = new User(newUser)
 	user.save().then((r) => {
 		res.setHeader("traceId", JSON.parse(getTraceIdJson()).traceId).status(201).send("User created..")
-		emitsPayloadMetric(res._contentLength + req.socket.bytesRead, '/user', res.statusCode);
+		// emitsPayloadMetric(res._contentLength + req.socket.bytesRead, '/user', res.statusCode);
+		emitsPayloadMetric(res._contentLength + mimicPayLoadSize(), '/user', res.statusCode);
         emitReturnTimeMetric(new Date().getMilliseconds() - requestStartTime, '/user', res.statusCode);
 		
 	}).catch( (err) => {
@@ -147,6 +152,7 @@ app.post("/users/:uid/order", async (req, res) => {
 				user.save().then(() => {
 					res.status(201)
 					res.send(`Order created for user:${user.email} with orderId:${orderResponse.data._id}`)
+					emitsPayloadMetric(res._contentLength + mimicPayLoadSize(), '/users', res.statusCode);
 				}).catch(e => {
 					res.status(404)
 					res.send("failed to add orderId in user's doc")
@@ -168,6 +174,7 @@ app.delete("/users/:uid", async (req, res) => {
 	User.findByIdAndDelete(req.params.uid).then((delUser) => {
 		if(delUser == null)
 		res.send("User deleted with success...")
+		emitsPayloadMetric(res._contentLength + mimicPayLoadSize(), '/users', res.statusCode);
 	}).catch( () => {
 		res.sendStatus(404)
 	})
@@ -179,6 +186,7 @@ app.delete("/users/:uid/orders", async (req, res) => {
 	res.setHeader("traceId", JSON.parse(getTraceIdJson()).traceId)
 	axios.delete(`${process.env.ORDERS_API_URL}/orders?uid=${req.params.uid}`).then( (delRes) => {
 		res.status(202).send("Orders deleted..")
+		emitsPayloadMetric(res._contentLength + mimicPayLoadSize(), '/users', res.statusCode);
 	}).catch( (err) => {
 		res.status(404).send("Orders not found...")
 	})
